@@ -1,12 +1,9 @@
-#!/usr/bin/env node
 
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
 const readline = require('readline');
 
-const VACATION_DIR = path.join(os.homedir(), '.vacation');
-const VACATION_FILE = path.join(VACATION_DIR, 'vacation.json');
+const VACATION_FILE = path.join(process.cwd(), 'vacation.json');
 
 const getCommand = () => {
     const args = process.argv.slice(2);
@@ -15,7 +12,7 @@ const getCommand = () => {
 
 const init = () => {
     if (fs.existsSync(VACATION_FILE)) {
-        console.log('❗ 이미 휴가 설정이 존재합니다.');
+        console.log('이미 휴가 설정이 존재합니다.');
         return;
     }
 
@@ -26,13 +23,9 @@ const init = () => {
 
     rl.question('입사일을 입력해주세요 (YYYY-MM-DD): ', (joinDate) => {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(joinDate)) {
-            console.log('❌ 날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식으로 입력해주세요.');
+            console.log('날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식으로 입력해주세요.');
             rl.close();
             return;
-        }
-
-        if (!fs.existsSync(VACATION_DIR)) {
-            fs.mkdirSync(VACATION_DIR, { recursive: true });
         }
 
         const data = {
@@ -42,14 +35,14 @@ const init = () => {
         };
 
         fs.writeFileSync(VACATION_FILE, JSON.stringify(data, null, 2));
-        console.log(`✅ 휴가 설정이 완료되었습니다. 설정 파일: ${VACATION_FILE}`);
+        console.log(`휴가 설정이 완료되었습니다. 설정 파일: ${VACATION_FILE}`);
         rl.close();
     });
 };
 
 const add = () => {
     if (!fs.existsSync(VACATION_FILE)) {
-        console.log('❗ 휴가 설정을 찾을 수 없습니다. "vacation init"을 먼저 실행해주세요.');
+        console.log('휴가 설정을 찾을 수 없습니다. "vacation init"을 먼저 실행해주세요.');
         return;
     }
 
@@ -60,7 +53,7 @@ const add = () => {
 
     rl.question('사용한 날짜를 입력해주세요 (YYYY-MM-DD): ', (date) => {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-            console.log('❌ 날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식으로 입력해주세요.');
+            console.log('날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식으로 입력해주세요.');
             rl.close();
             return;
         }
@@ -68,7 +61,7 @@ const add = () => {
         rl.question('사용한 시간을 입력해주세요: ', (hoursStr) => {
             const hours = parseInt(hoursStr, 10);
             if (isNaN(hours) || hours <= 0) {
-                console.log('❌ 시간이 올바르지 않습니다. 양수의 숫자를 입력해주세요.');
+                console.log('시간이 올바르지 않습니다. 양수의 숫자를 입력해주세요.');
                 rl.close();
                 return;
             }
@@ -110,7 +103,7 @@ const add = () => {
 
             data.used_vacations.push({ date, hours });
             fs.writeFileSync(VACATION_FILE, JSON.stringify(data, null, 2));
-            console.log('✅ 휴가 사용이 기록되었습니다.');
+            console.log('휴가 사용이 기록되었습니다.');
             rl.close();
         });
     });
@@ -118,7 +111,7 @@ const add = () => {
 
 const status = () => {
     if (!fs.existsSync(VACATION_FILE)) {
-        console.log('❗ 휴가 설정을 찾을 수 없습니다. "vacation init"을 먼저 실행해주세요.');
+        console.log('휴가 설정을 찾을 수 없습니다. "vacation init"을 먼저 실행해주세요.');
         return;
     }
 
@@ -132,24 +125,7 @@ const status = () => {
     const joinDate = new Date(join_date);
 
     /**
-     * 두 날짜 사이의 전체 월 수를 계산합니다.
-     * 월차 생성을 위한 핵심 로직입니다.
-     *
-     * 예시 1:
-     * 입사일: 2025-05-20
-     * 오늘: 2025-07-25
-     *
-     * 1. 월 차이: 7 - 5 = 2개월
-     * 2. 일자 확인: 25 >= 20 이므로, 두 번째 달은 "꽉 찬" 달로 간주합니다.
-     * 결과: 2개월이 지났습니다.
-     *
-     * 예시 2:
-     * 입사일: 2025-05-20
-     * 오늘: 2025-07-19
-     *
-     * 1. 월 차이: 7 - 5 = 2개월
-     * 2. 일자 확인: 19 < 20 이므로, 두 번째 달은 아직 "꽉 차지" 않았습니다.
-     * 결과: 1개월이 지났습니다.
+     * 두 날짜 사이의 전체 월 수를 계산
      */
     let passedMonths = (today.getFullYear() - joinDate.getFullYear()) * 12;
     passedMonths -= joinDate.getMonth();
@@ -160,20 +136,20 @@ const status = () => {
     passedMonths = Math.max(0, passedMonths);
 
 
-    // 월차는 1년차에만 생성됩니다 (최대 11일).
-    // 12개월차의 휴가는 1주년이 되는 날에 발생하는 연차에 포함됩니다.
+    // 월차는 1년차에만 생성(최대 11일).
+    // 12개월차의 휴가는 1주년이 되는 날에 발생하는 연차에 포함
     const firstAnniversary = new Date(joinDate);
     firstAnniversary.setFullYear(firstAnniversary.getFullYear() + 1);
 
     let generatedMonthlyDays = 0;
     if (today < firstAnniversary) {
-        // 1주년 이전인 경우, 생성된 월차를 계산합니다.
+        // 1주년 이전인 경우, 생성된 월차를 계산
         generatedMonthlyDays = passedMonths;
     } else {
-        // 1주년 이후인 경우, 월차 11일이 모두 부여됩니다.
+        // 1주년 이후인 경우, 월차 11일이 모두 부여
         generatedMonthlyDays = 11;
     }
-    // 월차는 최대 11일까지 생성됩니다.
+    // 월차는 최대 11일까지 생성
     generatedMonthlyDays = Math.min(11, generatedMonthlyDays);
 
 
