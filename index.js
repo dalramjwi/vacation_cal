@@ -39,6 +39,31 @@ const init = () => {
         rl.close();
     });
 };
+const recent = () => {
+    if (!fs.existsSync(VACATION_FILE)) {
+        console.log('휴가 설정을 찾을 수 없습니다. "vacation init"을 먼저 실행해주세요.');
+        return;
+    }
+
+    const data = JSON.parse(fs.readFileSync(VACATION_FILE, 'utf8'));
+    const { used_vacations } = data;
+
+    if (!used_vacations || used_vacations.length === 0) {
+        console.log('아직 사용한 휴가 기록이 없습니다.');
+        return;
+    }
+
+    // 날짜 기준으로 최신 순 정렬
+    const sorted = [...used_vacations].sort((a, b) => {
+        return b.date.localeCompare(a.date);
+    });
+
+    const latest = sorted[0];
+
+    console.log('[최근 사용한 휴가]');
+    console.log(`날짜: ${latest.date}`);
+    console.log(`사용 시간: ${latest.hours}시간`);
+};
 
 const add = () => {
     if (!fs.existsSync(VACATION_FILE)) {
@@ -172,6 +197,7 @@ const commands = {
     init,
     add,
     status,
+    recent,
     help: () => {
         console.log(`
 사용법: vacation <명령어>
